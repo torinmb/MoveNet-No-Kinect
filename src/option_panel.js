@@ -37,6 +37,7 @@ export async function setupDatGui(urlParams) {
   // The camera folder contains options for video settings.
   const cameraFolder = gui.addFolder('Camera');
   const fpsController = cameraFolder.add(params.STATE.camera, 'targetFPS');
+  cameraFolder.add(params.STATE.camera, 'displayCanvas');
   fpsController.onFinishChange((_) => {
     params.STATE.isTargetFPSChanged = true;
   });

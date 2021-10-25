@@ -168,8 +168,10 @@ async function renderResult() {
 
     endEstimatePosesStats();
   }
-
-  camera.drawCtx();
+  if(STATE.camera.displayCanvas) {
+    camera.drawCtx();
+  }
+  
 
   // The null check makes sure the UI is not in the middle of changing to a
   // different model. If during model change, the result is from an old model,
@@ -178,7 +180,9 @@ async function renderResult() {
     if (ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify(poses)); 
     }
-    camera.drawResults(poses);
+    if(STATE.camera.displayCanvas) {
+      camera.drawResults(poses);
+    }
   }
 }
 

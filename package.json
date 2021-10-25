@@ -1,0 +1,30 @@
+{
+  "name": "Move-Net-No-Kinect",
+  "version": "1.0.0",
+  "description": "stream movenet through websocket",
+  "main": "index.js",
+  "author": "Torin Blankensmith",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "watch": "cross-env NODE_ENV=development parcel index.html --no-hmr --open",
+    "build": "cross-env NODE_ENV=production parcel build index.html --public-url ./"
+  },
+  "dependencies": {
+    "@mediapipe/pose": "^0.4.1633558788",
+    "@tensorflow-models/pose-detection": "^0.0.6",
+    "@tensorflow/tfjs-backend-wasm": "^3.10.0",
+    "@tensorflow/tfjs-backend-webgl": "^3.10.0",
+    "@tensorflow/tfjs-converter": "^3.10.0",
+    "@tensorflow/tfjs-core": "^3.10.0",
+    "parcel-plugin-static-files-copy": "^2.6.0",
+    "scatter-gl": "^0.0.11"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.15.8",
+    "@babel/plugin-transform-runtime": "^7.15.8",
+    "@babel/preset-env": "^7.15.8",
+    "cross-env": "^7.0.3",
+    "parcel-bundler": "^1.12.5"
+  }
+}

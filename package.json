@@ -1,5 +1,5 @@
 {
-  "name": "Move-Net-No-Kinect",
+  "name": "MoveNet-No-Kinect",
   "version": "1.0.0",
   "description": "stream movenet through websocket",
   "main": "index.js",

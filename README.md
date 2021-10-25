@@ -1,4 +1,4 @@
-# Move-Net-No-Kinect
+# MoveNet-No-Kinect
 Stream MoveNet joints over websockets
 
 ## Project setup

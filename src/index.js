@@ -91,6 +91,12 @@ async function checkGuiUpdate() {
     STATE.isSizeOptionChanged = false;
   }
 
+  if (STATE.ws.isConnectWebSocketChanged) {
+    ws.close();
+    setupWebSocket(STATE.ws.wsURL);
+    STATE.ws.isConnectWebSocketChanged = false;
+  }
+
   if (STATE.isModelChanged || STATE.isFlagChanged || STATE.isBackendChanged) {
     STATE.isModelChanged = true;
 
@@ -229,32 +235,38 @@ async function app() {
   renderPrediction();
 };
 
-const socketURL = 'wss://websocket-server-template.herokuapp.com/:443';
-ws = new WebSocket(socketURL);
+setupWebSocket('wss://new-socket-server.herokuapp.com/:443');
 
-let keepAliveId;
-ws.onopen = event => {
-  console.log('Socket connection open');
-  keepAliveId = setInterval(() => {
-    wss.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send('keepAlive');
-      }
-    });
-  }, 50000);
-}
+function setupWebSocket(socketURL) {
+  ws = new WebSocket(socketURL);
 
-ws.onmessage = message => {
-  console.log('message', message)
-}
+  let keepAliveId;
+  ws.onopen = event => {
+    console.log('Socket connection open');
+    alert('Successfully connected to socket server 🎉');
+    keepAliveId = setInterval(() => {
+      wss.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send('keepAlive');
+        }
+      });
+    }, 50000);
+  }
 
-ws.onerror = error => {
-  console.log('Error in the connection', error);
-}
+  ws.onmessage = message => {
+    console.log('message', message)
+  }
 
-ws.onclose = event => {
-  console.log('Socket connection closed');
-  clearInterval(keepAliveId);
+  ws.onerror = error => {
+    console.log('Error in the connection', error);
+    alert('error connecting socket server', error);
+  }
+
+  ws.onclose = event => {
+    console.log('Socket connection closed');
+    alert('closing socket server');
+    clearInterval(keepAliveId);
+  }
 }
 
 app();

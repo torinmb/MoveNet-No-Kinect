@@ -35,6 +35,12 @@ export async function setupDatGui(urlParams) {
   gui.domElement.id = 'gui';
 
   // The camera folder contains options for video settings.
+  const wsURL = urlParams.get('wsURL');
+  if(wsURL) {
+    params.STATE.ws.wsURL = wsURL;
+    params.STATE.ws.isConnectWebSocketChanged = true;
+  }
+
   const wsFolder = gui.addFolder('WebSocket');
   wsFolder.add(params.STATE.ws, 'wsURL');
   const connect = wsFolder.add(params.STATE.ws, 'connect');

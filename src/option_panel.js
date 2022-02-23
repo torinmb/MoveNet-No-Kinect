@@ -55,17 +55,21 @@ export async function setupDatGui(urlParams) {
   fpsController.onFinishChange((_) => {
     params.STATE.isTargetFPSChanged = true;
   });
-  const sizeController = cameraFolder.add(
-      params.STATE.camera, 'sizeOption', Object.keys(params.VIDEO_SIZE));
-  sizeController.onChange(_ => {
-    params.STATE.isSizeOptionChanged = true;
-  });
+  // const sizeController = cameraFolder.add(
+  //     params.STATE.camera, 'sizeOption', Object.keys(params.VIDEO_SIZE));
+  // sizeController.onChange(_ => {
+  //   params.STATE.isSizeOptionChanged = true;
+  // });
   cameraFolder.open();
 
   // The model folder contains options for model selection.
   const modelFolder = gui.addFolder('Model');
 
-  const model = urlParams.get('model');
+  let model = urlParams.get('model');
+  if(!model) {
+    model = 'movenet';
+  }
+  console.log(model)
   let type = urlParams.get('type');
 
   switch (model) {

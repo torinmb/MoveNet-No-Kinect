@@ -206,9 +206,9 @@ async function app() {
   // Gui content will change depending on which model is in the query string.
   const urlParams = new URLSearchParams(window.location.search);
   if (!urlParams.has('model')) {
-    // urlParams.model = 'movenet'
-    alert('Cannot find model in the query string.');
-    return;
+    urlParams.model = 'movenet'
+    // alert('Cannot find model in the query string.');
+    // return;
   }
 
   await setupDatGui(urlParams);
@@ -222,15 +222,6 @@ async function app() {
   detector = await createDetector();
 
   console.log('starting');
-
-  // ws.onopen = function (event) {
-  //   console.log('connected')
-  //   ws.send("testing..."); 
-  // };
-
-  document.getElementById('send').addEventListener('click', () => {
-    ws.send(JSON.stringify({'test': 'hello'}));
-  });
 
   renderPrediction();
 };

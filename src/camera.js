@@ -103,8 +103,16 @@ export class Camera {
 
     camera.video.play();
 
-    const videoWidth = camera.video.videoWidth;
-    const videoHeight = camera.video.videoHeight;
+    
+
+    let videoWidth = camera.video.videoWidth;
+    let videoHeight = camera.video.videoHeight;
+    // console.log(videoWidth, window.innerWidth)
+    // if(videoWidth > window.innerWidth) {
+    //   console.log('setting size', videoWidth, videoHeight)
+    //   videoHeight = window.innerWidth / (videoWidth/videoHeight);
+    //   videoWidth = window.innerWidth;
+    // }
     // Must set below two lines, otherwise video element doesn't show.
     camera.video.width = videoWidth;
     camera.video.height = videoHeight;

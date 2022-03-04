@@ -211,6 +211,11 @@ async function app() {
     // return;
   }
 
+  let wsURL = 'wss://new-socket-server.herokuapp.com/:443'
+  if (urlParams.has('wsURL')) {
+    wsURL = urlParams.get('wsURL')
+  } 
+  setupWebSocket(wsURL);
   await setupDatGui(urlParams);
 
   stats = setupStats();
@@ -224,9 +229,11 @@ async function app() {
   console.log('starting');
 
   renderPrediction();
+
+  
 };
 
-setupWebSocket('wss://new-socket-server.herokuapp.com/:443');
+
 
 function setupWebSocket(socketURL) {
   ws = new WebSocket(socketURL);

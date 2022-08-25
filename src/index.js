@@ -238,20 +238,24 @@ async function app() {
 function setupWebSocket(socketURL) {
   ws = new WebSocket(socketURL);
 
-  let keepAliveId;
+  // let keepAliveId;
   ws.onopen = event => {
     console.log('Socket connection open');
     alert('Successfully connected to socket server 🎉');
-    keepAliveId = setInterval(() => {
-      wss.clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send('keepAlive');
-        }
-      });
-    }, 50000);
+    client.send('pong');
+    // keepAliveId = setInterval(() => {
+    //   wss.clients.forEach((client) => {
+    //     if (client.readyState === WebSocket.OPEN) {
+    //       client.send('ping');
+    //     }
+    //   });
+    // }, 50000);
   }
 
   ws.onmessage = message => {
+    if(message === 'ping') {
+      client.send('pong');
+    }
     console.log('message', message)
   }
 
@@ -263,7 +267,7 @@ function setupWebSocket(socketURL) {
   ws.onclose = event => {
     console.log('Socket connection closed');
     alert('closing socket server');
-    clearInterval(keepAliveId);
+    // clearInterval(keepAliveId);
   }
 }
 

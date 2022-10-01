@@ -253,10 +253,13 @@ function setupWebSocket(socketURL) {
   }
 
   ws.onmessage = message => {
-    if(message === 'ping') {
-      client.send('pong');
+    if (message && message.data) {
+      if (message.data === "ping") {
+        console.log("got ping");
+        ws.send("pong");
+        return;
+      }
     }
-    console.log('message', message)
   }
 
   ws.onerror = error => {

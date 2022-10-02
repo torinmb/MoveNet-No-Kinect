@@ -242,7 +242,7 @@ function setupWebSocket(socketURL) {
   ws.onopen = event => {
     console.log('Socket connection open');
     alert('Successfully connected to socket server 🎉');
-    client.send('pong');
+    ws.send('pong');
     // keepAliveId = setInterval(() => {
     //   wss.clients.forEach((client) => {
     //     if (client.readyState === WebSocket.OPEN) {

@@ -22,9 +22,9 @@ import * as mpPose from '@mediapipe/pose';
 
 import * as tfjsWasm from '@tensorflow/tfjs-backend-wasm';
 
-tfjsWasm.setWasmPaths(
-    `https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-wasm@${
-        tfjsWasm.version_wasm}/dist/`);
+// tfjsWasm.setWasmPaths(
+//     `https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-wasm@${
+//         tfjsWasm.version_wasm}/dist/`);
 
 import * as posedetection from '@tensorflow-models/pose-detection';
 
@@ -38,7 +38,7 @@ let detector, camera, stats;
 let startInferenceTime, numInferences = 0;
 let inferenceTimeSum = 0, lastPanelUpdate = 0;
 let rafId;
-
+let webcamDevices;
 let ws;
 
 async function createDetector() {
@@ -65,15 +65,23 @@ async function createDetector() {
       }
     case posedetection.SupportedModels.MoveNet:
       let modelType;
+      let modelConfig = {}
       if (STATE.modelConfig.type == 'lightning') {
         modelType = posedetection.movenet.modelType.SINGLEPOSE_LIGHTNING;
+        
+        modelConfig.modelUrl = "/dist/models/lightning/model.json"
       } else if (STATE.modelConfig.type == 'thunder') {
         modelType = posedetection.movenet.modelType.SINGLEPOSE_THUNDER;
+        modelConfig.modelUrl = "/dist/models/thunder/model.json"
       } else if (STATE.modelConfig.type == 'multipose') {
         modelType = posedetection.movenet.modelType.MULTIPOSE_LIGHTNING;
+        modelConfig.modelUrl = "/dist/models/multi-pose-lightning/model.json"
       }
-      const modelConfig = {modelType};
-
+      modelConfig.modelType = modelType;
+      console.log(modelConfig.modelUrl)
+      // const modelConfig = {modelType};
+      // modelConfig.modelUrl = 'http://localhost:9980/dist/models/lightning'
+      // modelConfig.modelUrl = "/dist/models/lightning.json"
       if (STATE.modelConfig.customModel !== '') {
         modelConfig.modelUrl = STATE.modelConfig.customModel;
       }
@@ -203,6 +211,7 @@ async function renderPrediction() {
 };
 
 async function app() {
+  webcamDevices = await getWebcamDevices();
   // Gui content will change depending on which model is in the query string.
   const urlParams = new URLSearchParams(window.location.search);
   if (!urlParams.has('model')) {
@@ -215,9 +224,18 @@ async function app() {
   if (urlParams.has('wsURL')) {
     wsURL = urlParams.get('wsURL')
   } 
+  
+  let webcamId = null;
+  if (urlParams.has('webcamId')) {
+    webcamId = urlParams.get('webcamId');
+    if (checkDeviceIds(webcamId, webcamDevices)) {
+      STATE.camera.deviceId.exact = webcamId;
+    }
+  } 
   setupWebSocket(wsURL);
   await setupDatGui(urlParams);
-
+  
+  console.log('webcamdevices1', webcamDevices)
   stats = setupStats();
 
   camera = await Camera.setupCamera(STATE.camera);
@@ -233,45 +251,92 @@ async function app() {
   
 };
 
+async function getWebcamDevices() {
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const webcams = devices.filter(device => device.kind === 'videoinput');
+    console.log('webcams', webcams)
+    return webcams.map(({ deviceId, label }) => ({ deviceId, label }));
+  } catch (error) {
+    console.error('Error getting webcam devices:', error);
+    return [];
+  }
+}
 
+function checkDeviceIds(key, deviceIds) {
+  for (let i = 0; i < deviceIds.length; i++) {
+    if (deviceIds[i].deviceId === key) {
+      return true;
+    }
+  }
+  return false;
+}
 
 function setupWebSocket(socketURL) {
   ws = new WebSocket(socketURL);
 
-  // let keepAliveId;
-  ws.onopen = event => {
-    console.log('Socket connection open');
-    alert('Successfully connected to socket server 🎉');
+  ws.addEventListener('open', (event) => {
+    console.log('WebSocket connection opened:', event);
     ws.send('pong');
-    // keepAliveId = setInterval(() => {
-    //   wss.clients.forEach((client) => {
-    //     if (client.readyState === WebSocket.OPEN) {
-    //       client.send('ping');
-    //     }
-    //   });
-    // }, 50000);
-  }
+    
+    getWebcamDevices().then(devices => {
+      console.log('devices', devices)
+      ws.send(JSON.stringify({ type: 'webcamDevices', devices }));
+    });
+  });
 
-  ws.onmessage = message => {
-    if (message && message.data) {
-      if (message.data === "ping") {
-        console.log("got ping");
-        ws.send("pong");
-        return;
-      }
+
+  ws.addEventListener('message', async (event) => {
+    if (event && event.data && event.data === "ping") {
+      ws.send("pong");
+      return;
     }
-  }
+    const message = JSON.parse(event.data);
+    if (message.type === 'selectWebcam') {
+      console.log("GOT selectwebcam message", message)
+      const deviceId = message.deviceId;
+      // const videoElement = document.createElement('video');
+      if (checkDeviceIds(deviceId, webcamDevices)) {
+        STATE.camera.deviceId.exact = deviceId;
+      }
+      
+      camera = await Camera.setupCamera(STATE.camera);
+      
+      // try {
+      //   const stream = await navigator.mediaDevices.getUserMedia({
+      //     video: { deviceId: { exact: deviceId } }
+      //   });
+      //   videoElement.srcObject = stream;
+      //   videoElement.play();
+      //   document.body.appendChild(videoElement);
+      // } catch (error) {
+      //   console.error('Error accessing webcam:', error);
+      // }
+    }
+  });  
+  
+  // ws.onmessage = message => {
+  //   if (message && message.data) {
+  //     if (message.data === "ping") {
+  //       console.log("got ping");
+  //       ws.send("pong");
+  //       return;
+  //     }
+  //   }
+  // }
 
-  ws.onerror = error => {
-    console.log('Error in the connection', error);
-    alert('error connecting socket server', error);
-  }
+  ws.addEventListener('error', (event) => {
+    console.error('Error in websocket connection', error);
+  });
 
-  ws.onclose = event => {
+  ws.addEventListener('close', (event) => {
     console.log('Socket connection closed');
-    alert('closing socket server');
-    // clearInterval(keepAliveId);
-  }
+  });
+  // ws.onclose = event => {
+  //   console.log('Socket connection closed');
+  //   alert('closing socket server');
+  //   // clearInterval(keepAliveId);
+  // }
 }
 
 app();

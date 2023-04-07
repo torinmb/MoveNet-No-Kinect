@@ -18,7 +18,7 @@ import * as posedetection from '@tensorflow-models/pose-detection';
 import * as tf from '@tensorflow/tfjs-core';
 
 import * as params from './params';
-
+import * as dat from './gui/dat.gui'
 /**
  * Records each flag's default value under the runtime environment and is a
  * constant in runtime.
@@ -177,7 +177,8 @@ function addPoseNetControllers(modelConfigFolder) {
 // settings.
 function addMoveNetControllers(modelConfigFolder, type) {
   params.STATE.modelConfig = {...params.MOVENET_CONFIG};
-  params.STATE.modelConfig.type = type != null ? type : 'lightning';
+  // params.STATE.modelConfig.type = type != null ? type : 'lightning';
+  params.STATE.modelConfig.type = type != null ? type : 'thunder';
 
   // Set multipose defaults on initial page load.
   if (params.STATE.modelConfig.type === 'multipose') {

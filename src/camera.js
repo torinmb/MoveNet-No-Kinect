@@ -73,7 +73,7 @@ export class Camera {
           'Browser API navigator.mediaDevices.getUserMedia not available');
     }
 
-    const {targetFPS, sizeOption} = cameraParam;
+    const {targetFPS, sizeOption, deviceId} = cameraParam;
     const $size = params.VIDEO_SIZE[sizeOption];
     const videoConfig = {
       'audio': false,
@@ -86,7 +86,8 @@ export class Camera {
                              $size.height,
         frameRate: {
           ideal: targetFPS,
-        }
+        },
+        deviceId
       }
     };
 

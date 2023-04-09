@@ -27,7 +27,7 @@ export const VIDEO_SIZE = {
 };
 export const STATE = {
   ws: {wsURL: 'wss://yourwebsocketurl:443', connect: () => {}},
-  camera: {targetFPS: 60, sizeOption: '640 X 360', displayCanvas: true},
+  camera: {targetFPS: 60, sizeOption: '640 X 360', displayCanvas: true,  deviceId: { exact: undefined }},
   backend: '',
   flags: {},
   modelConfig: {}
@@ -44,9 +44,9 @@ export const POSENET_CONFIG = {
 };
 export const MOVENET_CONFIG = {
   maxPoses: 1,
-  type: 'lightning',
+  type: 'thunder',
   scoreThreshold: 0.3,
-  customModel: '',
+  customModel: "/dist/models/thunder/model.json",
   enableTracking: false
 };
 /**

@@ -30,7 +30,7 @@ import * as posedetection from '@tensorflow-models/pose-detection';
 
 import {Camera} from './camera';
 import {setupDatGui} from './option_panel';
-import {STATE} from './params';
+import {STATE, BLAZEPOSE_CONFIG, MOVENET_CONFIG} from './params';
 import {setupStats} from './stats_panel';
 import {setBackendAndEnvFlags} from './util';
 
@@ -54,10 +54,12 @@ async function createDetector() {
     case posedetection.SupportedModels.BlazePose:
       const runtime = STATE.backend.split('-')[0];
       if (runtime === 'mediapipe') {
+        console.log("mpPose.VERSION", mpPose.VERSION)
         return posedetection.createDetector(STATE.model, {
           runtime,
           modelType: STATE.modelConfig.type,
-          solutionPath: `https://cdn.jsdelivr.net/npm/@mediapipe/pose@${mpPose.VERSION}`
+          solutionPath: '/dist/models/blaze'
+          // solutionPath: `https://cdn.jsdelivr.net/npm/@mediapipe/pose@${mpPose.VERSION}`
         });
       } else if (runtime === 'tfjs') {
         return posedetection.createDetector(
@@ -68,7 +70,6 @@ async function createDetector() {
       let modelConfig = {}
       if (STATE.modelConfig.type == 'lightning') {
         modelType = posedetection.movenet.modelType.SINGLEPOSE_LIGHTNING;
-        
         modelConfig.modelUrl = "/dist/models/lightning/model.json"
       } else if (STATE.modelConfig.type == 'thunder') {
         modelType = posedetection.movenet.modelType.SINGLEPOSE_THUNDER;
@@ -78,7 +79,7 @@ async function createDetector() {
         modelConfig.modelUrl = "/dist/models/multi-pose-lightning/model.json"
       }
       modelConfig.modelType = modelType;
-      console.log(modelConfig.modelUrl)
+      console.log('modelURL', modelConfig.modelUrl)
       // const modelConfig = {modelType};
       // modelConfig.modelUrl = 'http://localhost:9980/dist/models/lightning'
       // modelConfig.modelUrl = "/dist/models/lightning.json"
@@ -299,19 +300,57 @@ function setupWebSocket(socketURL) {
       if (checkDeviceIds(deviceId, webcamDevices)) {
         STATE.camera.deviceId.exact = deviceId;
       }
-      
       camera = await Camera.setupCamera(STATE.camera);
+    }
+    else if (message.type === 'selectModel') {
       
-      // try {
-      //   const stream = await navigator.mediaDevices.getUserMedia({
-      //     video: { deviceId: { exact: deviceId } }
-      //   });
-      //   videoElement.srcObject = stream;
-      //   videoElement.play();
-      //   document.body.appendChild(videoElement);
-      // } catch (error) {
-      //   console.error('Error accessing webcam:', error);
-      // }
+      // const modelType = message.modelType;
+      
+      // STATE.modelConfig.type = modelType;
+      // STATE.isModelChanged = true;
+
+      const modelType = message.modelType;
+      const modelVersion = message.modelVersion;
+      console.log("GOT selectModel message", message, modelType, modelVersion)
+      // Map the received model type to the actual model.
+      let mappedModel;
+      switch (modelType) {
+        case 'PoseNet':
+          mappedModel = posedetection.SupportedModels.PoseNet;
+          STATE.modelConfig = POSENET_CONFIG;
+          break;
+        case 'BlazePose':
+          mappedModel = posedetection.SupportedModels.BlazePose;
+          BLAZEPOSE_CONFIG.type = modelVersion;
+          STATE.modelConfig = BLAZEPOSE_CONFIG;
+          STATE.backend = 'mediapipe-gpu';
+          STATE.isBackendChanged = true;
+          break;
+        case 'MoveNet':
+          mappedModel = posedetection.SupportedModels.MoveNet;
+          STATE.backend = 'tfjs-webgl';
+          STATE.isBackendChanged = true;
+          if (modelVersion === 'multipose') {
+            // Set specific configurations for multi-pose.
+            MOVENET_CONFIG.enableTracking = true;
+            MOVENET_CONFIG.maxPoses = 6;  // You can adjust this value based on your requirement.
+          } else {
+            // Default configurations for single pose.
+            MOVENET_CONFIG.enableTracking = false;
+            MOVENET_CONFIG.maxPoses = 1;
+          }
+          
+          MOVENET_CONFIG.type = modelVersion;
+          STATE.modelConfig = MOVENET_CONFIG;
+          break;
+        default:
+          console.error(`Unknown model type received: ${modelType}`);
+          return;
+      }
+  
+      // Update the STATE.
+      STATE.model = mappedModel;
+      STATE.isModelChanged = true;
     }
   });  
   
